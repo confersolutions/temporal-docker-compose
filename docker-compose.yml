@@ -1,5 +1,7 @@
 version: "3.5"
+
 services:
+
   elasticsearch:
     container_name: temporal-elasticsearch
     image: elasticsearch:${ELASTICSEARCH_VERSION}
@@ -24,7 +26,6 @@ services:
     environment:
       POSTGRES_USER: temporal
       POSTGRES_PASSWORD: temporal
-      # Optional but nice to be explicit:
       POSTGRES_DB: temporal
     networks:
       - temporal-network
@@ -45,19 +46,20 @@ services:
       - POSTGRES_USER=temporal
       - POSTGRES_PWD=temporal
       - POSTGRES_SEEDS=postgresql
-      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
       - ENABLE_ES=true
       - ES_SEEDS=elasticsearch
       - ES_VERSION=v7
       - TEMPORAL_ADDRESS=temporal:7233
       - TEMPORAL_CLI_ADDRESS=temporal:7233
+    command: >
+      /bin/sh -c "
+      temporal-server start
+      --dynamic-config-file /etc/temporal/config/dynamicconfig/development-sql.yaml
+      "
     networks:
       - temporal-network
     ports:
       - 7233:7233
-    # IMPORTANT: removed this volume because it was hiding the default config
-    # volumes:
-    #   - ./dynamicconfig:/etc/temporal/config/dynamicconfig
 
   temporal-admin-tools:
     container_name: temporal-admin-tools
@@ -79,13 +81,9 @@ services:
       - temporal
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
-      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+      - TEMPORAL_CORS_ORIGINS=https://temporal.confersolutions.ai
     networks:
       - temporal-network
-    # In Coolify you usually map 8080 at the app level, so no ports needed here.
-    # If running locally with `docker-compose` only, you could add:
-    # ports:
-    #   - 8080:8080
 
 networks:
   temporal-network:
